@@ -80,4 +80,60 @@ ORDER BY no_of_wins DESC;
 | SA | 1 | 0 | 1 |
 | SL | 2 | 0 | 2 |
 
+## Input 2:
 
+| order_id | customer_id | order_date | order_amount |
+| --------- | --------- | --------- | --------- |
+| 1 | 100 | 2022-01-01 | 2000 |
+| 2 | 200 | 2022-01-01 | 2500 |
+| 3 | 300 |2022-01-01 | 2100 |
+| 4 | 100 | 2022-01-02 | 2000 |
+| 5 | 400 | 2022-01-02 | 2200 |
+| 6 | 500 | 2022-01-02 | 2700 |
+| 7 | 100 | 2022-01-03 | 3000 |
+| 8 | 400 | 2022-01-03 | 1000 |
+| 9 | 600 | 2022-01-03 | 3000 |
+
+## Question 2: 
+
+Find out new and repeating customers
+
+## Queries: 
+
+way 1: 
+
+```SQL
+WITH first_visit AS
+(SELECT 
+	customer_id, 
+	MIN(order_date) AS first_visit_date
+FROM customer_orders co
+GROUP BY customer_id),
+visit_flag AS
+(SELECT 
+	co.*,
+	fv.first_visit_date,
+	CASE WHEN co.order_date = fv.first_visit_date
+		THEN 1
+		ELSE 0
+		END AS first_visit_flag,
+	CASE WHEN co.order_date <> fv.first_visit_date
+		THEN 1
+		ELSE 0
+		END AS repeat_visit_flag
+FROM customer_orders co
+INNER JOIN first_visit fv
+ON co.customer_id = fv.customer_id
+ORDER BY order_id)
+SELECT order_date, SUM(first_visit_flag) AS no_of_new_customers, SUM(repeat_visit_flag) AS no_of_repeat_customer
+FROM visit_flag
+GROUP BY order_date;
+```
+
+## Output 2:
+
+| Order_date | new_customer | repeat_customer |
+| ------------ | ------------ | ------------ |
+| 2022-01-01 | 3 | 0 |
+| 2022-01-02 | 2 | 2 |
+| 2022-01-03 | 1 | 2 |
