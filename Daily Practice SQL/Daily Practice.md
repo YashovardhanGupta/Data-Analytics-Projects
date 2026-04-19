@@ -250,3 +250,215 @@ ORDER BY t.total_visits DESC;
 |  1 | A | 3 | 1 | CPU, DESKTOP |
 |  2 | B | 3 | 2 | DESKTOP, MONITOR |
 
+
+## Input 2:
+
+<u> `Person` Table </u>
+
+| Rank | Name | Score |
+| --- | --- | --- |
+| 1 | Alice | 88 |
+| 2 | Bob | 11 |
+| 3 | Devis | 27 |
+| 4 | Tara | 45 |
+| 5 | John | 63 |
+
+<u> `Friend` Table </u>
+
+| pid | fid |
+| --- | --- |
+| 1 | 2 |
+| 1 | 3 |
+| 2 | 1 |
+| 2 | 3 |
+| 3 | 5 |
+| 4 | 2 |
+| 4 | 3 |
+
+## Question 2:
+
+write a query to find PersonID, Name, number of friends, sum of marks of person who have friends with total score greater than 100.
+
+## Query:
+```sql
+WITH score_details AS
+(
+	SELECT 
+		f.pid,
+		COUNT(1) AS no_of_friends,
+		SUM(p.score) as total_friend_score
+	FROM friend f
+	JOIN person p
+	ON f.fid=p.pid
+	GROUP BY f.pid
+	HAVING SUM(p.score) > 100
+)
+SELECT 
+	s.*,
+	p.name AS Name
+FROM person p
+JOIN score_details s
+ON p.pid = s.pid;
+```
+
+## Output 2:
+
+| pid | no_of_friends | total_friend_score | name |
+| --- | --- | --- | --- |
+| 2 | 2 | 115 | Bob |
+| 4 | 3 | 101 | Tara |
+
+
+# 19 Apr 2026
+## Input 1:
+
+<u>`User's` Table</u>
+
+| users_id | banned | role |
+| --- | --- | --- |
+| 1 | No | client |
+| 2 | Yes | client |
+| 3 | No | client |
+| 4 | No | client |
+| 10 | No | driver |
+| 11 | No | driver |
+| 12 | No | driver |
+| 13 | No | driver |
+
+<u> `Trips` Table </u>
+
+| id | client_id | driver_id | city_id | status | request_at |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 10 | 1 | completed | 01-10-2013 |
+| 2 | 2 | 11 | 1 | cancelled_by_driver | 01-10-2013 |
+| 3 | 3 | 12 | 6 | completed | 01-10-2013 |
+| 4 | 4 | 13 | 6 | cancelled_by_client | 01-10-2013 |
+| 5 | 1 | 10 | 1 | completed | 02-10-2013 |
+| 6 | 2 | 11 | 6 | completed | 02-10-2013 |
+| 7 | 3 | 12 | 6 | completed | 02-10-2013 |
+| 8 | 2 | 12 | 12 | completed | 03-10-2013 |
+| 9 | 3 | 10 | 12 | completed | 03-10-2013 |
+| 10 | 4 | 13 | 12 | cancelled_by_driver | 03-10-2013 |
+
+
+## Question 1:
+Write a SQL query to find the cancellation rate of requests with unbanned users (both client and driver must not be banned) each day between "2013-10-01" and "2013-10-03". Round Cancellation Rate to two decimal points.
+
+The cancellation rate is computed by dividing the number of canceled (by client or driver) requests with unbanned users by the total number of requests with unbanned users on that day.
+
+## Query:
+
+```sql
+SELECT 
+	request_at,
+	COUNT(CASE WHEN status IN ('cancelled_by_driver', 'cancelled_by_client') 
+				THEN 1 
+				ELSE null 
+				END) AS trips_cancelled,
+	count(1) AS total_trips,
+	((COUNT(CASE WHEN status IN ('cancelled_by_driver', 'cancelled_by_client') 
+					THEN 1 
+					ELSE null 
+					END)) * 100) / COUNT(request_at) AS cancellation_rate_in_percent
+FROM trips t
+JOIN users c
+ON t.client_id = c.users_id
+JOIN users d
+ON t.driver_id = d.users_id
+WHERE c.banned = 'No' AND d.banned = 'No'
+GROUP BY request_at;
+```
+
+## Output 1:
+
+| request_at | trips_cancelled | total_trips | cancellation_rate_in_percent |
+| --- | --- | --- | --- |
+| 01-10-2013 | 1 | 3 | 33 |
+| 02-10-2013 | 0 | 2 | 0 |
+| 03-10-2013 | 1 | 2 | 50 |
+
+
+## Input 2:
+
+<u> `Matches` Table </u>
+
+| match_id | first_player | second_player | first_score | second_score |
+| --- | --- | --- | --- | --- |
+| 1 | 15 | 45 | 3 | 0 |
+| 2 | 30 | 25 | 1 | 2 |
+| 3 | 30 | 15 | 2 | 0 |
+| 4 | 40 | 20 | 5 | 2 |
+| 5 | 35 | 50 | 1 | 1 |
+
+
+<u> `Players` Table </u>
+
+| player_id | group_id |
+| --- | --- |
+| 15 | 1 |
+| 25 | 1 |
+| 30 | 1 |
+| 45 | 1 |
+| 10 | 2 |
+| 35 | 2 |
+| 50 | 2 |
+| 20 | 3 |
+| 40 | 3 |
+
+
+## Question 2:
+Write an SQL Query to find the winner in each group.
+
+*The winner in each group is the player who scoerd the maximum total points withing the group. In the case of a tie, the lowest player_id wins.*
+
+## Query:
+
+```sql
+WITH player_scores AS
+(
+	SELECT
+		first_player AS player_id,
+		first_score AS score
+	FROM matches
+
+	UNION ALL
+
+	SELECT
+		second_player AS player_id,
+		second_score AS score
+	FROM matches	
+),
+groups as
+(
+	SELECT 
+		ps.player_id,
+		SUM(ps.score) as Total_Score,
+		p.group_id
+	FROM player_scores ps
+	JOIN players p
+	ON ps.player_id = p.player_id
+	GROUP BY ps.player_id, p.group_id
+	ORDER BY Total_Score DESC
+)
+SELECT 
+	player_id,
+	group_id
+FROM 
+	(
+		SELECT 
+			player_id, 
+			group_id,
+			RANK() OVER (PARTITION BY group_id ORDER BY total_score DESC, player_id ASC) as rn
+		FROM groups
+	) t
+WHERE rn = 1;
+```
+
+## Output 2:
+
+| player_id | group_id |
+|-----------|----------|
+| 15       | 1        |
+| 35       | 2        |
+| 40       | 3        |
+

@@ -157,6 +157,15 @@ GROUP BY a.order_date;
 ----------------
 -- 18 Apr 2026
 ----------------
+-----------------------------------------------------------------------------------------------
+/*
+In an office, an employee is allowed to enter a floor only once and to ensure this system,
+the employee is supposed to enter their unique email.
+But there was a loophole found where the employee can feed **more than one unique email id**.
+You are tasked to find out **total visits** and the **most visited floor** of the employees
+and **what resources they used**.
+*/
+-----------------------------------------------------------------------------------------------
 
 create table entries ( 
 name varchar(20),
@@ -209,3 +218,194 @@ JOIN resources_cte r
     ON c.name = r.name
 WHERE c.rn = 1
 ORDER BY t.total_visits DESC;
+
+
+---------------------------------------------
+drop table friend 
+Create table friend (pid int, fid int)
+insert into friend (pid , fid ) values ('1','2');
+insert into friend (pid , fid ) values ('1','3');
+insert into friend (pid , fid ) values ('2','1');
+insert into friend (pid , fid ) values ('2','3');
+insert into friend (pid , fid ) values ('3','5');
+insert into friend (pid , fid ) values ('4','2');
+insert into friend (pid , fid ) values ('4','3');
+insert into friend (pid , fid ) values ('4','5');
+drop table person
+create table person (pid int,	Name varchar(50),	Score int)
+insert into person(pid,Name ,Score) values('1','Alice','88')
+insert into person(pid,Name ,Score) values('2','Bob','11')
+insert into person(pid,Name ,Score) values('3','Devis','27')
+insert into person(pid,Name ,Score) values('4','Tara','45')
+insert into person(pid,Name ,Score) values('5','John','63')
+select * from person
+select * from friend
+
+
+/*write a query to find PersonID, Name, number of friends, sum of marks
+of person who have friends with total score greater than 100. */
+
+-- pId, Name, number_of_friends, sum_of_marks 
+
+
+WITH score_details AS
+(
+	SELECT 
+		f.pid,
+		COUNT(1) AS no_of_friends,
+		SUM(p.score) as total_friend_score
+	FROM friend f
+	JOIN person p
+	ON f.fid=p.pid
+	GROUP BY f.pid
+	HAVING SUM(p.score) > 100
+)
+SELECT 
+	s.*,
+	p.name AS Name
+FROM person p
+JOIN score_details s
+ON p.pid = s.pid;
+
+------------------------------------------
+---------------
+-- 19 Apr 2026
+---------------
+
+
+
+
+Create table  Trips (id int, client_id int, driver_id int, city_id int, status varchar(50), request_at varchar(50));
+Create table Users (users_id int, banned varchar(50), role varchar(50));
+Truncate table Trips;
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('1', '1', '10', '1', 'completed', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('2', '2', '11', '1', 'cancelled_by_driver', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('3', '3', '12', '6', 'completed', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('4', '4', '13', '6', 'cancelled_by_client', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('5', '1', '10', '1', 'completed', '2013-10-02');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('6', '2', '11', '6', 'completed', '2013-10-02');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('7', '3', '12', '6', 'completed', '2013-10-02');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('8', '2', '12', '12', 'completed', '2013-10-03');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('9', '3', '10', '12', 'completed', '2013-10-03');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('10', '4', '13', '12', 'cancelled_by_driver', '2013-10-03');
+Truncate table Users;
+insert into Users (users_id, banned, role) values ('1', 'No', 'client');
+insert into Users (users_id, banned, role) values ('2', 'Yes', 'client');
+insert into Users (users_id, banned, role) values ('3', 'No', 'client');
+insert into Users (users_id, banned, role) values ('4', 'No', 'client');
+insert into Users (users_id, banned, role) values ('10', 'No', 'driver');
+insert into Users (users_id, banned, role) values ('11', 'No', 'driver');
+insert into Users (users_id, banned, role) values ('12', 'No', 'driver');
+insert into Users (users_id, banned, role) values ('13', 'No', 'driver');
+select * from Users;
+select * from Trips;
+
+/*
+Write a SQL query to find the cancellation rate of requests with unbanned users
+(both client and driver must not be banned) each day between "2013-10-01" and "2013-10-03".
+Round Cancellation Rate to two decimal points.
+
+The cancellation rate is computed by dividing the number of canceled (by client or driver)
+requests with unbanned users by the total number of requests with unbanned users on that day.
+*/
+
+SELECT 
+	request_at,
+	COUNT(CASE WHEN status IN ('cancelled_by_driver', 'cancelled_by_client') 
+				THEN 1 
+				ELSE null 
+				END) AS trips_cancelled,
+	count(1) AS total_trips,
+	((COUNT(CASE WHEN status IN ('cancelled_by_driver', 'cancelled_by_client') 
+					THEN 1 
+					ELSE null 
+					END)) * 100) / COUNT(request_at) AS cancellation_rate_in_percent
+FROM trips t
+JOIN users c
+ON t.client_id = c.users_id
+JOIN users d
+ON t.driver_id = d.users_id
+WHERE c.banned = 'No' AND d.banned = 'No'
+GROUP BY request_at;
+
+
+------------------------------------------------
+
+create table players
+(player_id int,
+group_id int)
+
+insert into players values (15,1);
+insert into players values (25,1);
+insert into players values (30,1);
+insert into players values (45,1);
+insert into players values (10,2);
+insert into players values (35,2);
+insert into players values (50,2);
+insert into players values (20,3);
+insert into players values (40,3);
+select * from players
+create table matches
+(
+match_id int,
+first_player int,
+second_player int,
+first_score int,
+second_score int)
+
+insert into matches values (1,15,45,3,0);
+insert into matches values (2,30,25,1,2);
+insert into matches values (3,30,15,2,0);
+insert into matches values (4,40,20,5,2);
+insert into matches values (5,35,50,1,1);
+select * from matches;
+
+/*
+Write an SQL Query to find the winner in each group
+The winner in each group is the player who scoerd the maximum total points withing the group. 
+In the case of a tie, the lowest player_id wins.
+*/
+
+
+WITH player_scores AS
+(
+	SELECT
+		first_player AS player_id,
+		first_score AS score
+	FROM matches
+
+	UNION ALL
+
+	SELECT
+		second_player AS player_id,
+		second_score AS score
+	FROM matches	
+),
+groups as
+(
+	SELECT 
+		ps.player_id,
+		SUM(ps.score) as Total_Score,
+		p.group_id
+	FROM player_scores ps
+	JOIN players p
+	ON ps.player_id = p.player_id
+	GROUP BY ps.player_id, p.group_id
+	ORDER BY Total_Score DESC
+)
+SELECT 
+	player_id,
+	group_id
+FROM 
+	(
+		SELECT 
+			player_id, 
+			group_id,
+			RANK() OVER (PARTITION BY group_id ORDER BY total_score DESC, player_id ASC) as rn
+		FROM groups
+	) t
+WHERE rn = 1;
+
+	
+	
+
