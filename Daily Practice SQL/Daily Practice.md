@@ -462,3 +462,108 @@ WHERE rn = 1;
 | 35       | 2        |
 | 40       | 3        |
 
+# 21 Apr 2026
+## Input 1:
+
+<u> `Products` Table </u>:
+
+| id |	name |
+| -- | -- |
+| 1 |	A |
+| 2 |	B |
+| 3 |	C |
+| 4 |	D |
+| 5 |	E |
+
+<u> `Orders` Table </u>:
+
+|order_id |	customer_id |	product_id |
+| -- | -- | -- |
+|1 |	1 |	1 |
+|1 |	1 |	2 |
+|1 |	1 |	3 |
+|2 |	2 |	1 |
+|2 |	2 |	2 |
+|2 |	2 |	4 |
+|3 |	1 |	5 |
+
+## Question 1:
+
+A simple basket analysis question, return pair and the frequency of them being bought together
+
+## Query: 
+
+```sql
+
+```
+
+## Output 1:
+
+
+# 28 Apr 2026
+## Inpute 1
+
+<u> `Stores` Table </u>:
+| store | quarter | amount|
+| ----- | ------ | ------ |
+| S1 | Q2 | 300|
+| S1 | Q4 | 400|
+| S2 | Q1 | 500|
+| S2 | Q3 | 600|
+| S2 | Q4 | 700|
+| S3 | Q1 | 800|
+| S3 | Q2 | 750|
+| S3 | Q3 | 900|
+
+## Question:
+
+Find the missing quarter that a store is not functioning on
+
+## Queries:
+
+Way 1:
+
+```sql
+SELECT 
+	store,
+	10 - SUM(CAST(RIGHT(quarter, 1) as INT)) as Missing_Quarter
+FROM stores
+GROUP BY store;
+```
+
+Alternate Way (Recursive CTE):
+
+```sql
+WITH RECURSIVE cte AS
+(
+    SELECT DISTINCT store, 1 AS q_no
+    FROM stores
+
+    UNION ALL
+
+    SELECT store, q_no + 1
+    FROM cte
+    WHERE q_no < 4
+),
+q AS
+(
+    SELECT 
+        store,
+        'Q' || q_no::text AS missing_quarter
+    FROM cte
+)
+SELECT q.*
+FROM q
+LEFT JOIN stores s
+ON q.store = s.store
+AND q.missing_quarter = s.quarter
+WHERE s.store IS NULL;
+```
+
+## Output 2:
+
+| store | missing_quarter |
+| ---- | ---- |
+| S1 | Q3 |
+| S2 | Q2 |
+| S3 | Q4 |

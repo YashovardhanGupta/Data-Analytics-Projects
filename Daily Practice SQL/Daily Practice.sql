@@ -407,5 +407,102 @@ FROM
 WHERE rn = 1;
 
 	
-	
+---------------------------------------------------------
+----------------
+-- 21 Apr 2026
+----------------
 
+create table orders
+(
+	order_id int,
+	customer_id int,
+	product_id int
+)
+
+insert into orders VALUES 
+(1, 1, 1),
+(1, 1, 2),
+(1, 1, 3),
+(2, 2, 1),
+(2, 2, 2),
+(2, 2, 4),
+(3, 1, 5);
+
+create table products (
+id int,
+name varchar(10)
+);
+
+insert into products VALUES 
+(1, 'A'),
+(2, 'B'),
+(3, 'C'),
+(4, 'D'),
+(5, 'E');
+
+select * from orders;
+select * from products;
+
+
+-----------------------------------
+---------------
+-- 28 Apr 2026
+---------------
+
+
+CREATE TABLE stores(
+	Store VARCHAR(10),
+	Quarter VARCHAR(10),
+	Amount INT
+);
+
+
+INSERT INTO stores(store, quarter, amount) VALUES
+('S1', 'Q1', 200),
+('S1', 'Q2', 300),
+('S1', 'Q4', 400),
+('S2', 'Q1', 500),
+('S2', 'Q3', 600),
+('S2', 'Q4', 700),
+('S3', 'Q1', 800),
+('S3', 'Q2', 750),
+('S3', 'Q3', 900);
+
+
+SELECT * 
+FROM stores;
+
+-- way 1
+
+SELECT 
+	store,
+	10 - SUM(CAST(RIGHT(quarter, 1) as INT)) as Missing_Quarter
+FROM stores
+GROUP BY store;
+
+-- way 2
+
+WITH RECURSIVE cte AS
+(
+    SELECT DISTINCT store, 1 AS q_no
+    FROM stores
+
+    UNION ALL
+
+    SELECT store, q_no + 1
+    FROM cte
+    WHERE q_no < 4
+),
+q AS
+(
+    SELECT 
+        store,
+        'Q' || q_no::text AS missing_quarter
+    FROM cte
+)
+SELECT q.*
+FROM q
+LEFT JOIN stores s
+ON q.store = s.store
+AND q.missing_quarter = s.quarter
+WHERE s.store IS NULL;
