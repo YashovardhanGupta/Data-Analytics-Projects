@@ -540,7 +540,7 @@ WITH RECURSIVE cte AS
     FROM stores
 
     UNION ALL
-
+ 
     SELECT store, q_no + 1
     FROM cte
     WHERE q_no < 4
